@@ -229,7 +229,7 @@ interface RedditComment {
 			ext?: string,
 			id?: string,
 			m?: "image/gif"|"image/png"|"image/jpeg",
-			p?: {
+			p?: null|{
 				u: string,
 				x: number,
 				y: number,
