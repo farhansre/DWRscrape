@@ -691,6 +691,7 @@ interface RedditPost {
 				caption?: string,
 				display_url?: "bestbuy.com",
 				id: number,
+				is_deleted?: boolean,
 				media_id: string,
 				outbound_url?: string,
 			}[],
@@ -1085,6 +1086,7 @@ interface RedditPost {
 			caption?: string,
 			display_url?: string,
 			id: number,
+			is_deleted?: boolean,
 			media_id: string,
 			outbound_url?: string,
 			product?: {

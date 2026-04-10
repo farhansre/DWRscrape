@@ -96,6 +96,7 @@ interface RedditPost_2026 {
 			items: {
 				caption?: string,
 				id: number,
+				is_deleted?: boolean,
 				media_id: string,
 				outbound_url?: string,
 			}[],
@@ -417,6 +418,7 @@ interface RedditPost_2026 {
 			caption?: string,
 			display_url?: string,
 			id: number,
+			is_deleted?: boolean,
 			media_id: string,
 			outbound_url?: string,
 			product?: {
@@ -572,7 +574,7 @@ interface RedditPost_2026 {
 		vote_updates_remained: null,
 		voting_end_timestamp: number,
 	}|null,
-	post_hint?: "image"|"hosted:video"|"link"|"rich:video"|"self"|"gallery"|"video",
+	post_hint?: "image"|"hosted:video"|"link"|"rich:video"|"self"|"video"|"gallery",
 	preview?: {
 		enabled: boolean,
 		images: {
@@ -655,7 +657,7 @@ interface RedditPost_2026 {
 	},
 	priority_id?: null,
 	product_ids?: [],
-	promo_layout?: null|"SPOTLIGHT_VIDEO",
+	promo_layout?: null|"SPOTLIGHT_VIDEO"|"PRODUCT",
 	promoted?: boolean,
 	promoted_by?: null,
 	promoted_display_name?: null,
@@ -723,7 +725,7 @@ interface RedditPost_2026 {
 	subreddit_id: string,
 	subreddit_name_prefixed: string,
 	subreddit_subscribers: number,
-	subreddit_type: "public"|"user"|"restricted",
+	subreddit_type: "public"|"user"|"restricted"|"private",
 	suggested_sort: null|"confidence"|"new"|"qa"|"top"|"old"|"controversial"|"live"|"random",
 	third_party_trackers?: [],
 	third_party_tracking?: null,

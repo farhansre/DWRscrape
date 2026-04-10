@@ -1,21 +1,6 @@
 
 # Downloads links
 
-## Direct download
-
-All files are first uploaded in the shared folder below. A couple of days later, torrents should be available.
-
-SHA256 Hashes of all files are in the hashes.txt file.
-
-The RX_202X_XX_info.md files contain the total number of records in each file, the uncompressed size
-and a TypeScript like interface describing the JSON objects.
-
-Note when downloading from filen.io:
-- Download one file at a time, using the "Normal download" option
-- Don't use the "ZIP download" or "Download folder" options, those are too slow
-
-https://drive.filen.io/f/fb67389b-2eb2-42e8-9d2f-474ca153e105#cgZ5eW2NWXuS9n9rVhdnTkPDmZAeuOhk
-
 ## Torrents
 
 Torrents are available either in the original zst_blocks format or as recompressed zst files. Zst files up to 2024-03 are reformatted and updated with additional data sources. For question specifically regarding zst files, ask [u/Watchful1](https://www.reddit.com/user/Watchful1/). Starting from 2024-04, archives will only be released as zst files by me.
@@ -57,6 +42,7 @@ Please seed the torrents for as long as possible. Shortly after release download
 | 2005-06 - 2025-12 | [Academic Torrents](https://academictorrents.com/details/3d426c47c767d40f82c7ef0f47c3acacedd2bf44)              |                                                                                                    |
 | 2026-01           | [Academic Torrents](https://academictorrents.com/details/8412b89151101d88c915334c45d9c223169a1a60)              |                                                                                                    |
 | 2026-02           | [Academic Torrents](https://academictorrents.com/details/c5ba00048236b60f819dbf010e9034d24fc291fb)              |                                                                                                    |
+| 2026-03           | [Academic Torrents](https://academictorrents.com/details/668087bb8c8c9c763b27a1a4c5e7fcb6add25f2c)              |                                                                                                    |
 
 ### Other
 
