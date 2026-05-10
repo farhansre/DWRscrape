@@ -737,9 +737,9 @@ interface RedditPost {
 			room_id: string,
 			room_status?: number,
 		},
-		location_lat?: null,
-		location_long?: null,
-		location_name?: null,
+		location_lat?: null|number,
+		location_long?: null|number,
+		location_name?: null|"London, Greater London"|"Norway",
 		locked: boolean,
 		media: null|{
 			content?: string,
