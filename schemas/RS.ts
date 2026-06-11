@@ -739,7 +739,7 @@ interface RedditPost {
 		},
 		location_lat?: null|number,
 		location_long?: null|number,
-		location_name?: null|"London, Greater London"|"Norway",
+		location_name?: null|"London, Greater London"|"Norway"|"Venice (Venezia), Veneto"|"Houston, TX",
 		locked: boolean,
 		media: null|{
 			content?: string,

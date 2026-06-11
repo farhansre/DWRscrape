@@ -242,7 +242,7 @@ interface RedditComment {
 				y: number,
 			},
 			status: "valid"|"unprocessed"|"invalid",
-			t?: "sticker"|"emoji"|"giphy",
+			t?: "giphy"|"sticker"|"emoji",
 		},
 	},
 	mod_note?: null,
