@@ -4,3 +4,4 @@
 *.pyc
 
 schemas_raw
+sample_place/*.jsonl
