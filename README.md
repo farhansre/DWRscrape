@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Project Arctic Shift
 
 Making Reddit data accessible to researchers, moderators and everyone else.
@@ -60,3 +61,6 @@ Removal forms of other archives: [Pushshift](https://docs.google.com/forms/d/1JS
 If you have questions, you can DM me on [discord](https://discord.com/users/282513022734565377) (*raiderbv* if the link doesn't work) or [email](mailto:arctic.shift.contact@gmail.com
 ).
 Alternatively open an issue or pull request.
+=======
+# DWRscrape
+>>>>>>> 13f3a2b4a145b014cafb98b7b5b846b2adcecc89
