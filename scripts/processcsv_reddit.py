@@ -1,37 +1,40 @@
 import os
 import re
+from collections import defaultdict
+
 import pandas as pd
+
+
 
 
 base_folder = "/Users/sreej/Desktop/arctic_shift"
 
 posts_input_csv = os.path.join(
     base_folder,
-    "askacademia_ai_writing_posts.csv"
+    "askacademia_ai_writing_posts.csv",
 )
 
 comments_input_csv = os.path.join(
     base_folder,
-    "askacademia_ai_writing_comments.csv"
+    "askacademia_ai_writing_comments.csv",
 )
 
 output_folder = os.path.join(
     base_folder,
-    "readable_outputs"
+    "readable_outputs",
 )
 
 os.makedirs(output_folder, exist_ok=True)
 
-posts_output_md = os.path.join(
+threads_output_md = os.path.join(
     output_folder,
-    "askacademia_posts.md"
+    "askacademia_threads.md",
 )
 
-comments_output_md = os.path.join(
-    output_folder,
-    "askacademia_comments.md"
-)
 
+# ------------------------------------------------------------------
+# HELPERS
+# ------------------------------------------------------------------
 
 def clean_text(value):
     if pd.isna(value):
@@ -39,14 +42,12 @@ def clean_text(value):
 
     text = str(value)
     text = re.sub(r"\s+", " ", text).strip()
-
     return text
 
 
 def safe_value(value):
     if pd.isna(value):
         return ""
-
     return str(value)
 
 
@@ -55,14 +56,14 @@ def safe_number(value):
         return 0
 
     try:
-        number = float(value)
+        value = float(value)
 
-        if number.is_integer():
-            return int(number)
+        if value.is_integer():
+            return int(value)
 
-        return number
+        return value
 
-    except (TypeError, ValueError):
+    except Exception:
         return 0
 
 
@@ -73,157 +74,245 @@ def markdown_heading(text):
     return text or "Untitled"
 
 
+# ------------------------------------------------------------------
+# VALIDATE FILES
+# ------------------------------------------------------------------
+
 if not os.path.exists(posts_input_csv):
-    raise FileNotFoundError(
-        f"Posts CSV not found: {posts_input_csv}"
-    )
+    raise FileNotFoundError(posts_input_csv)
 
 if not os.path.exists(comments_input_csv):
-    raise FileNotFoundError(
-        f"Comments CSV not found: {comments_input_csv}"
-    )
+    raise FileNotFoundError(comments_input_csv)
 
+
+# ------------------------------------------------------------------
+# LOAD
+# ------------------------------------------------------------------
 
 posts_df = pd.read_csv(
     posts_input_csv,
-    low_memory=False
+    low_memory=False,
 )
 
 comments_df = pd.read_csv(
     comments_input_csv,
-    low_memory=False
+    low_memory=False,
 )
 
+
+# ------------------------------------------------------------------
+# CLEAN POSTS
+# ------------------------------------------------------------------
 
 posts_df["title"] = posts_df["title"].apply(clean_text)
 posts_df["selftext"] = posts_df["selftext"].apply(clean_text)
 
-posts_df["score"] = pd.to_numeric(
-    posts_df["score"],
-    errors="coerce"
-).fillna(0)
+posts_df["score"] = (
+    pd.to_numeric(posts_df["score"], errors="coerce")
+    .fillna(0)
+)
 
-posts_df["num_comments"] = pd.to_numeric(
-    posts_df["num_comments"],
-    errors="coerce"
-).fillna(0)
+posts_df["num_comments"] = (
+    pd.to_numeric(
+        posts_df["num_comments"],
+        errors="coerce",
+    ).fillna(0)
+)
 
 posts_df = posts_df.sort_values(
     by=["score", "num_comments"],
-    ascending=[False, False]
+    ascending=[False, False],
 ).reset_index(drop=True)
 
+
+# ------------------------------------------------------------------
+# CLEAN COMMENTS
+# ------------------------------------------------------------------
 
 comments_df["body"] = comments_df["body"].apply(clean_text)
 
-comments_df["score"] = pd.to_numeric(
-    comments_df["score"],
-    errors="coerce"
-).fillna(0)
+comments_df["score"] = (
+    pd.to_numeric(
+        comments_df["score"],
+        errors="coerce",
+    ).fillna(0)
+)
+
+comments_df["post_id"] = (
+    comments_df["post_id"]
+    .astype(str)
+    .str.strip()
+)
 
 comments_df = comments_df.sort_values(
-    by=["score"],
-    ascending=[False]
+    by=["post_id", "score"],
+    ascending=[True, False],
 ).reset_index(drop=True)
 
 
-with open(posts_output_md, "w", encoding="utf-8") as file:
-    file.write("# r/AskAcademia AI Writing Posts\n\n")
-    file.write(f"Total posts: {len(posts_df)}\n\n")
-    file.write("---\n\n")
+# ------------------------------------------------------------------
+# GROUP COMMENTS BY THREAD
+# ------------------------------------------------------------------
 
-    for _, row in posts_df.iterrows():
-        title = markdown_heading(row.get("title"))
+comments_by_post = defaultdict(list)
+
+for _, row in comments_df.iterrows():
+    comments_by_post[
+        str(row["post_id"])
+    ].append(row)
+
+
+# ------------------------------------------------------------------
+# WRITE THREAD MARKDOWN
+# ------------------------------------------------------------------
+
+with open(
+    threads_output_md,
+    "w",
+    encoding="utf-8",
+) as file:
+
+    file.write("# r/AskAcademia AI Writing Threads\n\n")
+
+    file.write(
+        f"Matched posts: {len(posts_df)}\n"
+    )
+
+    file.write(
+        f"Collected comments: {len(comments_df)}\n\n"
+    )
+
+    file.write("=" * 80)
+    file.write("\n\n")
+
+    for _, post in posts_df.iterrows():
+
+        post_id = str(post["id"])
+
+        title = markdown_heading(
+            post["title"]
+        )
 
         file.write(f"## {title}\n\n")
+
         file.write(
-            f"**Score:** {safe_number(row.get('score'))}  \n"
-        )
-        file.write(
-            f"**Comments:** "
-            f"{safe_number(row.get('num_comments'))}  \n"
-        )
-        file.write(
-            f"**Date:** "
-            f"{safe_value(row.get('created_date'))}  \n"
-        )
-        file.write(
-            f"**Concept groups:** "
-            f"{safe_value(row.get('concept_groups'))}  \n"
-        )
-        file.write(
-            f"**AI terms:** "
-            f"{safe_value(row.get('matched_ai_terms'))}  \n"
-        )
-        file.write(
-            f"**Matched concepts:** "
-            f"{safe_value(row.get('matched_concept_terms'))}  \n"
+            f"**Subreddit:** r/{safe_value(post['subreddit'])}  \n"
         )
 
-        permalink = safe_value(row.get("permalink"))
+        file.write(
+            f"**Author:** {safe_value(post['author'])}  \n"
+        )
+
+        file.write(
+            f"**Score:** {safe_number(post['score'])}  \n"
+        )
+
+        file.write(
+            f"**Comments:** {safe_number(post['num_comments'])}  \n"
+        )
+
+        file.write(
+            f"**Date:** {safe_value(post['created_date'])}  \n"
+        )
+
+        file.write(
+            f"**Concept Groups:** {safe_value(post['concept_groups'])}  \n"
+        )
+
+        file.write(
+            f"**AI Terms:** {safe_value(post['matched_ai_terms'])}  \n"
+        )
+
+        file.write(
+            f"**Matched Concepts:** {safe_value(post['matched_concept_terms'])}  \n"
+        )
+
+        permalink = safe_value(
+            post["permalink"]
+        )
 
         if permalink:
             file.write(
-                f"**Link:** [Open Reddit post]({permalink})\n\n"
+                f"**Link:** {permalink}\n\n"
             )
-        else:
-            file.write("\n")
 
-        body = clean_text(row.get("selftext"))
+        body = clean_text(
+            post["selftext"]
+        )
 
         if body:
-            file.write(body + "\n\n")
+            file.write(body)
+            file.write("\n\n")
 
-        file.write("---\n\n")
+        file.write("-" * 80)
+        file.write("\n\n")
 
-
-with open(comments_output_md, "w", encoding="utf-8") as file:
-    file.write("# r/AskAcademia AI Writing Comments\n\n")
-    file.write(f"Total comments: {len(comments_df)}\n\n")
-    file.write("---\n\n")
-
-    for _, row in comments_df.iterrows():
-        post_id = safe_value(row.get("post_id"))
-
-        file.write(f"## Comment on post {post_id}\n\n")
-        file.write(
-            f"**Score:** {safe_number(row.get('score'))}  \n"
-        )
-        file.write(
-            f"**Date:** "
-            f"{safe_value(row.get('created_date'))}  \n"
-        )
-        file.write(
-            f"**Concept groups:** "
-            f"{safe_value(row.get('concept_groups'))}  \n"
-        )
-        file.write(
-            f"**AI terms:** "
-            f"{safe_value(row.get('matched_ai_terms'))}  \n"
-        )
-        file.write(
-            f"**Matched concepts:** "
-            f"{safe_value(row.get('matched_concept_terms'))}  \n"
+        thread_comments = comments_by_post.get(
+            post_id,
+            [],
         )
 
-        permalink = safe_value(row.get("permalink"))
+        file.write(
+            f"## Comments ({len(thread_comments)})\n\n"
+        )
 
-        if permalink:
+        if not thread_comments:
+
             file.write(
-                f"**Link:** "
-                f"[Open Reddit comment]({permalink})\n\n"
+                "*No comments collected.*\n\n"
             )
+
         else:
-            file.write("\n")
 
-        body = clean_text(row.get("body"))
+            for comment in thread_comments:
 
-        if body:
-            file.write(body + "\n\n")
+                file.write(
+                    f"### Score {safe_number(comment['score'])}"
+                )
 
-        file.write("---\n\n")
+                author = safe_value(
+                    comment["author"]
+                )
+
+                if author:
+                    file.write(
+                        f" | u/{author}"
+                    )
+
+                file.write("\n\n")
+
+                created = safe_value(
+                    comment["created_date"]
+                )
+
+                if created:
+                    file.write(
+                        f"**Date:** {created}\n\n"
+                    )
+
+                permalink = safe_value(
+                    comment["permalink"]
+                )
+
+                if permalink:
+                    file.write(
+                        f"**Link:** {permalink}\n\n"
+                    )
+
+                body = clean_text(
+                    comment["body"]
+                )
+
+                if body:
+                    file.write(body)
+                    file.write("\n\n")
+
+                file.write("." * 70)
+                file.write("\n\n")
+
+        file.write("=" * 80)
+        file.write("\n\n")
 
 
 print("Saved:")
-print(posts_output_md)
-print(comments_output_md)
+print(threads_output_md)

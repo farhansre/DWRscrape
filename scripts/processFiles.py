@@ -812,6 +812,11 @@ comment_rows = []
 seen_post_ids = set()
 seen_comment_ids = set()
 
+# IDs of posts that matched our concepts.
+matched_post_ids = set()
+
+all_rows = []
+
 
 #text processing 
 
@@ -1016,9 +1021,7 @@ def process_post(row: dict):
     post_rows.append({
         "concept_groups": "; ".join(matched_group_names),
         "matched_ai_terms": "; ".join(match["ai_terms"]),
-        "matched_concept_terms": "; ".join(
-            matched_concept_terms
-        ),
+        "matched_concept_terms": "; ".join(matched_concept_terms),
         "id": post_id,
         "subreddit": row.get("subreddit", ""),
         "title": title,
@@ -1034,6 +1037,7 @@ def process_post(row: dict):
         ),
     })
 
+    matched_post_ids.add(post_id)
     seen_post_ids.add(post_id)
 
 
@@ -1053,32 +1057,19 @@ def process_comment(row: dict):
     if body.strip().lower() in {"[deleted]", "[removed]"}:
         return
 
-    match = matches_concepts(body)
-
-    if match is None:
-        return
-
-    matched_group_names = sorted(
-        match["concept_groups"].keys()
-    )
-
-    matched_concept_terms = flatten_concept_terms(match)
-
-    created_utc = row.get("created_utc", "")
-
     link_id = str(row.get("link_id", "") or "").strip()
     post_id = clean_reddit_id(link_id)
+
+    if post_id not in matched_post_ids:
+        return
+
+    created_utc = row.get("created_utc", "")
 
     parent_id = str(
         row.get("parent_id", "") or ""
     ).strip()
 
     comment_rows.append({
-        "concept_groups": "; ".join(matched_group_names),
-        "matched_ai_terms": "; ".join(match["ai_terms"]),
-        "matched_concept_terms": "; ".join(
-            matched_concept_terms
-        ),
         "id": comment_id,
         "post_id": post_id,
         "link_id": link_id,
@@ -1107,6 +1098,7 @@ def processFile(path: str):
     print(f"Processing file {path}")
 
     with open(path, "rb") as file:
+
         jsonStream = getFileJsonStream(path, file)
 
         if jsonStream is None:
@@ -1116,6 +1108,7 @@ def processFile(path: str):
         progressLog = FileProgressLog(path, file)
 
         for row in jsonStream:
+
             progressLog.onRow()
 
             if not isinstance(row, dict):
@@ -1125,20 +1118,40 @@ def processFile(path: str):
                 row.get("subreddit", "")
             ).strip().lower()
 
-            # Accept both r/AskAcademia and r/academia.
             if subreddit not in {"askacademia", "academia"}:
                 continue
 
-            # Reddit posts generally have a title.
-            if "title" in row:
-                process_post(row)
-
-            # Reddit comments generally have body and link_id.
-            elif "body" in row and "link_id" in row:
-                process_comment(row)
+            all_rows.append(row)
 
         progressLog.logProgress("\n")
 
+def process_cached_rows():
+
+    print()
+
+    print("Pass 1/2 : Matching posts...")
+
+    for row in all_rows:
+
+        if "title" in row:
+            process_post(row)
+
+    print(
+        f"Matched {len(post_rows)} posts."
+    )
+
+    print()
+
+    print("Pass 2/2 : Collecting comments...")
+
+    for row in all_rows:
+
+        if "body" in row and "link_id" in row:
+            process_comment(row)
+
+    print(
+        f"Collected {len(comment_rows)} comments."
+    )
 
 def processFolder(path: str):
     fileIterator: Iterable[str]
@@ -1205,10 +1218,8 @@ def write_posts_csv():
 
 
 def write_comments_csv():
+
     fieldnames = [
-        "concept_groups",
-        "matched_ai_terms",
-        "matched_concept_terms",
         "id",
         "post_id",
         "link_id",
@@ -1221,6 +1232,21 @@ def write_comments_csv():
         "created_date",
         "permalink",
     ]
+
+    with open(
+        comments_output_csv,
+        "w",
+        newline="",
+        encoding="utf-8",
+    ) as file:
+
+        writer = csv.DictWriter(
+            file,
+            fieldnames=fieldnames,
+        )
+
+        writer.writeheader()
+        writer.writerows(comment_rows)
 
     with open(
         comments_output_csv,
@@ -1242,63 +1268,46 @@ def write_comments_csv():
 # -------------------------------------------------------------------
 
 def print_summary():
+
     post_group_counts = {}
-    comment_group_counts = {}
 
     for row in post_rows:
+
         groups = row["concept_groups"].split("; ")
 
         for group in groups:
+
             if group:
+
                 post_group_counts[group] = (
                     post_group_counts.get(group, 0) + 1
                 )
 
-    for row in comment_rows:
-        groups = row["concept_groups"].split("; ")
-
-        for group in groups:
-            if group:
-                comment_group_counts[group] = (
-                    comment_group_counts.get(group, 0) + 1
-                )
-
     print()
+
     print("=" * 60)
     print("RESULTS")
     print("=" * 60)
 
-    print(f"Saved {len(post_rows)} unique matching posts")
-    print(f"Posts CSV: {os.path.abspath(posts_output_csv)}")
+    print(f"Matched posts     : {len(post_rows)}")
+    print(f"Collected comments: {len(comment_rows)}")
 
     print()
-    print(
-        f"Saved {len(comment_rows)} "
-        "unique matching comments"
-    )
-    print(
-        f"Comments CSV: "
-        f"{os.path.abspath(comments_output_csv)}"
-    )
+
+    print(f"Posts CSV    : {os.path.abspath(posts_output_csv)}")
+    print(f"Comments CSV : {os.path.abspath(comments_output_csv)}")
 
     if post_group_counts:
+
         print()
+
         print("Post matches by concept group:")
 
         for group, count in sorted(
             post_group_counts.items(),
-            key=lambda item: (-item[1], item[0])
+            key=lambda item: (-item[1], item[0]),
         ):
-            print(f"  {group}: {count}")
 
-    if comment_group_counts:
-        print()
-        print("Comment matches by concept group:")
-
-        for group, count in sorted(
-            comment_group_counts.items(),
-            key=lambda item: (-item[1], item[0])
-        ):
             print(f"  {group}: {count}")
 
     print("=" * 60)
@@ -1315,6 +1324,8 @@ def main():
     else:
         processFile(fileOrFolderPath)
 
+    process_cached_rows()
+
     # Sort results to make the CSV files easier to inspect.
     post_rows.sort(
         key=lambda row: (
@@ -1325,18 +1336,18 @@ def main():
     )
 
     comment_rows.sort(
-        key=lambda row: (
-            row["concept_groups"],
-            -(row["score"] or 0),
-            row["created_utc"] or 0,
-        )
+    key=lambda row: (
+        row["post_id"],
+        -(row["score"] or 0),
+        row["created_utc"] or 0,
     )
+)
 
     write_posts_csv()
     write_comments_csv()
     print_summary()
 
-    print("Done :>")
+    print("Done")
 
 
 if __name__ == "__main__":
