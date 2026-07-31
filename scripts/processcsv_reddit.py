@@ -11,12 +11,12 @@ base_folder = "/Users/sreej/Desktop/arctic_shift"
 
 posts_input_csv = os.path.join(
     base_folder,
-    "askacademia_ai_writing_posts.csv",
+    "PhD_ai_writing_posts.csv",
 )
 
 comments_input_csv = os.path.join(
     base_folder,
-    "askacademia_ai_writing_comments.csv",
+    "PhD_ai_writing_comments.csv",
 )
 
 output_folder = os.path.join(
@@ -28,7 +28,7 @@ os.makedirs(output_folder, exist_ok=True)
 
 threads_output_md = os.path.join(
     output_folder,
-    "askacademia_threads.md",
+    "PhD_ai_writing_threads.md",
 )
 
 

@@ -18,8 +18,8 @@ fileOrFolderPath = (
     r"/Users/sreej/Desktop/arctic_shift/sample_place"
 )
 
-posts_output_csv = "askacademia_ai_writing_posts.csv"
-comments_output_csv = "askacademia_ai_writing_comments.csv"
+posts_output_csv = "PhD_ai_writing_posts.csv"
+comments_output_csv = "PhD_ai_writing_comments.csv"
 
 
 # -------------------------------------------------------------------
@@ -172,10 +172,6 @@ CONCEPT_GROUPS = {
         "synthesized literature",
         "research gap",
         "research gaps",
-        "gap in literature",
-        "gap in the literature",
-        "gaps in literature",
-        "gaps in the literature",
     },
 
     # ---------------------------------------------------------------
@@ -1118,7 +1114,11 @@ def processFile(path: str):
                 row.get("subreddit", "")
             ).strip().lower()
 
-            if subreddit not in {"askacademia", "academia"}:
+            if subreddit not in {
+                "askacademia",
+                "academia",
+                "phd",
+                "gradschool",}:
                 continue
 
             all_rows.append(row)
