@@ -18,8 +18,8 @@ fileOrFolderPath = (
     r"/Users/sreej/Desktop/arctic_shift/sample_place"
 )
 
-posts_output_csv = "PhD_ai_writing_posts.csv"
-comments_output_csv = "PhD_ai_writing_comments.csv"
+posts_output_csv = "professors_ai_writing_posts.csv"
+comments_output_csv = "professors_ai_writing_comments.csv"
 
 
 # -------------------------------------------------------------------
@@ -1118,7 +1118,7 @@ def processFile(path: str):
                 "askacademia",
                 "academia",
                 "phd",
-                "gradschool",}:
+                "professors",}:
                 continue
 
             all_rows.append(row)
